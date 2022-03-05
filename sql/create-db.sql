@@ -1,0 +1,3 @@
+CREATE USER flightsusr WITH ENCRYPTED PASSWORD 'flightsusr';
+CREATE DATABASE flightsdb;
+GRANT ALL PRIVILEGES ON DATABASE flightsdb TO flightsusr;
