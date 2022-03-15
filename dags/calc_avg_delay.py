@@ -19,7 +19,7 @@ DELAY_LIST_AEP_AVG_DELAY = 2
 
 def main(**context):
     """
-    Abre el archivo file_name y lo iter linea por linea sin cargarlo todo a memoria
+    Abre el archivo file_name y lo itera linea por linea sin cargarlo todo a memoria
     Calcula el promedio de demora por dia y por aeropuerto
     Escribe el resultado en un archivo nuevo
     """
@@ -56,6 +56,11 @@ def generate_aep_dic(file_name):
         header = next(csv_reader)
         # Iterate over each row in the csv using reader object
 
+        rows_parsed = 0
+        min_delay = None
+        max_delay = None
+        avg_delay = None
+
         if header is not None:
             print(f"Header was: {header}")
 
@@ -63,11 +68,35 @@ def generate_aep_dic(file_name):
                 fl_date = row[FL_DATE_COL_IDX]
                 origin = row[ORIGIN_COL_IDX]
                 dep_delay_str = row[DEP_DELAY_COL_IDX]
+                rows_parsed = rows_parsed + 1
 
                 if dep_delay_str == "":
                     dep_delay = 0.0
                 else:
                     dep_delay = float(row[DEP_DELAY_COL_IDX])
+
+                if min_delay is None:
+                    min_delay = dep_delay
+                else:
+                    min_delay = min(dep_delay, min_delay)
+
+                if max_delay is None:
+                    max_delay = dep_delay
+                else:
+                    max_delay = max(dep_delay, max_delay)
+
+                if avg_delay is None:
+                    avg_delay = dep_delay
+                else:
+                    avg_delay = avg_delay * (
+                        rows_parsed - 1
+                    )  # obtener sumatoria actual partiendo del promedio
+                    avg_delay = (
+                        avg_delay + dep_delay
+                    )  # sumar la nueva contribucion para obtener la nueva suma
+                    avg_delay = (
+                        avg_delay / rows_parsed
+                    )  # a la nueva suma se la divide por uno mas
 
                 parse_row = [
                     fl_date,
@@ -75,7 +104,9 @@ def generate_aep_dic(file_name):
                     dep_delay,
                 ]
                 # row variable is a list that represents a row in csv
-                print(parse_row)
+                # imprimir primeras 5 filas de datos
+                if rows_parsed <= 5:
+                    print(parse_row)
 
                 date_dic = aep_dic.get(origin)  # columna de aeropuerto
 
@@ -114,7 +145,12 @@ def generate_aep_dic(file_name):
                 header[ORIGIN_COL_IDX],
                 header[DEP_DELAY_COL_IDX],
             ]
+            print("HEADER")
             print(parse_header)
+            print("STATS")
+            file_stats = f"Rows: {rows_parsed} -- avg delay: {avg_delay} -- min delay: {min_delay} -- max delay: {max_delay}"
+            print(file_stats)
+
     return aep_dic
 
 

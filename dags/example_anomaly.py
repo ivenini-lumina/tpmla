@@ -3,11 +3,13 @@
 # License: BSD 3 clause
 
 import time
+import datetime
 from csv import reader
 
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from pendulum import date
 
 from sklearn import svm
 from sklearn.datasets import make_moons, make_blobs
@@ -22,9 +24,19 @@ matplotlib.rcParams["contour.negative_linestyle"] = "solid"
 
 ANSWER_TO_EVERYTHING = 42
 
+# plt.xlim(-1500, 1500)
+
+PLOT_EXPECTED_MIN_X = 1
+PLOT_EXPECTED_MAX_X = 366
+
+# plt.ylim(-50, 50)
+
+PLOT_EXPECTED_MIN_Y = -100
+PLOT_EXPECTED_MAX_Y = 650
+
 # Example settings
 n_samples = 300
-outliers_fraction = 0.15
+outliers_fraction = 0.06
 n_outliers = int(outliers_fraction * n_samples)
 n_inliers = n_samples - n_outliers
 
@@ -78,7 +90,7 @@ def load_dataset(file_name):
 
             for idx, row in enumerate(csv_reader):
                 origin = row[AEP_CODE_IDX]
-                fl_date = row[FL_DATE_IDX]
+                fl_date_str = row[FL_DATE_IDX]
                 dep_delay_str = row[AVG_DELAY_IDX]
 
                 if dep_delay_str == "":
@@ -86,7 +98,11 @@ def load_dataset(file_name):
                 else:
                     dep_delay = float(row[AVG_DELAY_IDX])
 
-                parse_fl_date = float(fl_date.replace("-", "")[4:])
+                fl_date = datetime.datetime.strptime(fl_date_str, "%Y-%m-%d")
+                day_of_year = (fl_date - datetime.datetime(fl_date.year, 1, 1)).days + 1
+
+                # parse_fl_date = float(fl_date.replace("-", "")[4:])
+                parse_fl_date = day_of_year
                 parse_dep_delay = dep_delay
 
                 parse_row = [parse_fl_date, parse_dep_delay]
@@ -193,9 +209,9 @@ def main(n_outliers, anomaly_algorithms, datasets, xx_param, yy_param, plot_num,
         # Add outliers
         print(f"    >>> - Start Running Dataset # {i_dataset} with size: {len(X)}")
 
-        X = np.concatenate(
-            [X, rng.uniform(low=-6, high=6, size=(n_outliers, 2))], axis=0
-        )
+        # X = np.concatenate(
+        #    [X, rng.uniform(low=-6, high=6, size=(n_outliers, 2))], axis=0
+        # )
 
         # X = np.concatenate(
         #    [X, rng.uniform(low=-6, high=6, size=(n_outliers, 2))], axis=0
@@ -265,11 +281,8 @@ def main(n_outliers, anomaly_algorithms, datasets, xx_param, yy_param, plot_num,
                 scatter_x0_in, scatter_x1_in, s=10, color=colors[(y_pred + 1) // 2]
             )
 
-            plt.xlim(-7, 7)
-            plt.ylim(-7, 7)
-
-            # plt.xlim(-1500, 1500)
-            # plt.ylim(-50, 50)
+            plt.xlim(PLOT_EXPECTED_MIN_X, PLOT_EXPECTED_MAX_X)
+            plt.ylim(PLOT_EXPECTED_MIN_Y, PLOT_EXPECTED_MAX_Y)
 
             # plt.xticks(())
             # plt.yticks(())
