@@ -20,11 +20,12 @@ Con la version 1.29.2 se puede correr (con la que viene al instalar docker en ub
     adminer web db=stocksdb -> flightsusr : flightsusr @ local-ip:9080 
     adminer web db=airflow -> airflow : airflow @ local-ip:9080 
     
-3- Configurar en airflow una conexion a la base de datos postgres stocksdb
+3- Configurar en airflow una conexion a la base de datos postgres para persistencia
     id = flightsdb-conn
     type = postgres
     host = local-ip
-    shcema = flightsdb
-    user : pass = flightsusr : flightsusr
+    schema = flightsdb
+    login = flightsusr
+    password = flightsusr
 
 

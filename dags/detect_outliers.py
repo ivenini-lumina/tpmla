@@ -61,7 +61,7 @@ def create_algorithms(random_seed, anomaly_percent):
     return anomaly_algorithms
 
 
-def load_dataset(file_name):
+def load_dataset(dic_key, file_path):
     """
     Carga el archivo file_name y lo itera linea por linea sin cargarlo todo a memoria
     Genera una lista que tiene un array con los datos para luego alimentar a los algoritmos de
@@ -71,8 +71,10 @@ def load_dataset(file_name):
     outlier_sub_list = []
     outlier_list.append(outlier_sub_list)
 
+    dataset_dic = {}
+
     # open file in read mode
-    with open(file_name, "r", encoding="UTF-8") as read_obj:
+    with open(file_path, "r", encoding="UTF-8") as read_obj:
         # pass the file object to reader() to get the reader object
         csv_reader = reader(read_obj)
         header = next(csv_reader)
@@ -112,14 +114,24 @@ def load_dataset(file_name):
     result_sub_array = np.array(out_sublist)
     dataset_list.append(result_sub_array)
 
-    return dataset_list
+    dataset_dic[dic_key] = dataset_list
+
+    return dataset_dic
 
 
-def detect_outliers(anomaly_algorithms, datasets, xx_param, yy_param):
+def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
     """
-    Corre los algoritmos para detectar outliers y grafica el resultado
-    Puede recibir varios datasets a iterar y por cada dataset genera
+    - Corre los algoritmos para detectar outliers y grafica el resultado
+    - Recibe un diccionario de datasets. La key es str y corresponde al codigo
+    del aeropuerto. El valor de cada entrada es una lista con los valores
+    [numero_dia - int , demora promedio - float]
+    - El valor numero_dia es un valor entre 1 a 366
+    - Puede recibir varios datasets a iterar y por cada dataset genera
     un grafico con los resultados de cada algoritmo usado
+    - Se genera un archivo de salida png por cada dataset procesado
+    - Existen dos modos de ejecucion. Se puede recibir un solo dataset
+    que tiene los datos de todos los aeropuertos juntos o sino
+    puede recibirse un dataset por cada aeropuerto
     """
 
     print(">>> - Run each algorithm in each dataset")
@@ -128,6 +140,7 @@ def detect_outliers(anomaly_algorithms, datasets, xx_param, yy_param):
         print(
             f"    >>> - Start Running Dataset # {i_dataset} with size: {len(data_vec_x)}"
         )
+        print(f"    >>> - Data: {data_vec_x}")
 
         plot_num = 1
 
@@ -137,9 +150,9 @@ def detect_outliers(anomaly_algorithms, datasets, xx_param, yy_param):
             fit_end_time = time.time()
             plt.subplot(len(datasets), len(anomaly_algorithms), plot_num)
             if i_dataset == 0:
-                plt.title(algo_name, size=18)
+                plt.title(f"{data_key} -- {algo_name}", size=15)
 
-            print(f"        >>> - Run algorithm {algo_name}")
+            print(f"        >>> - Run algorithm {algo_name} for key={data_key}")
 
             # fit the data and tag outliers
             if algo_name == "Local Outlier Factor":
@@ -151,7 +164,7 @@ def detect_outliers(anomaly_algorithms, datasets, xx_param, yy_param):
                 print(f"INPUT : {data_vec_x}")
                 print(f"OUTPUT: {y_pred}")
 
-            print(f"        >>> - Plot algorithm {algo_name}")
+            print(f"        >>> - Plot algorithm {algo_name} for key={data_key}")
 
             # plot the levels lines and the points
             if algo_name != "Local Outlier Factor":  # LOF does not implement predict
@@ -206,16 +219,19 @@ def detect_outliers(anomaly_algorithms, datasets, xx_param, yy_param):
             # plt.xticks(())
             # plt.yticks(())
 
+            elapsed_fit_time = fit_end_time - fit_start_time
+            elapsed_fit_time_str = (f"{elapsed_fit_time:.2f} sec").lstrip("0")
+
             plt.text(
                 0.99,
                 0.01,
-                ("%.2fs" % (fit_end_time - fit_start_time)).lstrip("0"),
+                elapsed_fit_time_str,
                 transform=plt.gca().transAxes,
                 size=15,
                 horizontalalignment="right",
             )
-            print(f"        END - Plot algorithm {algo_name}")
-            print(f"        END - Run algorithm {algo_name}")
+            print(f"        END - Plot algorithm {algo_name} for key={data_key}")
+            print(f"        END - Run algorithm {algo_name} for key={data_key}")
             print(f"    END - Run dataset # {i_dataset}")
             plot_num += 1
 
@@ -224,15 +240,15 @@ def detect_outliers(anomaly_algorithms, datasets, xx_param, yy_param):
     print(">>> - Save plot to PNG")
 
     # plt.show()
-    plt.savefig("./data/example.png")
+    plt.savefig(f"./data/{data_key}.png")
 
-    print("END - Save plot to PNG")
+    print(f"END - Save plot to PNG for {data_key}")
 
 
 def main(**context):
     """
     Obtiene los parametros necesarios para correr la deteccion de anomalias
-    y luego invoca al metodo main_local para correr los algoritmos de deteccion
+    y luego invoca al metodo "main_local" para correr los algoritmos de deteccion
     """
 
     print(f"Context: {context} ")
@@ -246,25 +262,44 @@ def main(**context):
 
 def main_local(execution_date):
     """
-    Abre el archivo file_name y lo iter linea por linea sin cargarlo todo a memoria
-    Instancia el modelo de deteccion de anormalidades
-    Corre el modelo
+    Proposito: Generar un archivo png graficando los vuelos por cada aeropuerto en un periodo anual
+    En el grafico se identifican los vuelos con demoras promedio y los vuelos con demoras anomalas
+    trazando una frontera divisoria mediante una linea separadora
+
+    * Primero: Inicializa los algoritmos de deteccion
+    * Segundo: Abre el archivo de datos "avg_XXX.csv" correspondiente al campo "year" del parametro
+    execution_date y genera un diccionario con  key = aeropueto y value = lista de vuelos
+    por fecha para ese aeropuerto. Se puede tambien generar un diccionario con key = "ALL_AEP" que
+    en lugar de una lista por aeropuerto tenga uns sola key con todos los datos del periodo
+    combinando todos los aeropuertos
+    * Tercero: Genera una estructura de datos de vectores "mesh" para trazar las fronteras entre
+    inliers y outliers
+    * Cuarto: Invocan a "detect_outliers" que se encarga de correr los algoritmos de anomalias y
+    generar el grafico correspondiente
     """
-    # diccionario con key : aeropuerto -- value : diccionario por fecha
-    # contiene el promedio del tiempo de demora de salida (columna
-    # DEP_DELAY) por aeropuerto de salida (columna ORIGIN) y dia
 
-    data_file_name = f"avg_{str(execution_date.year)}.csv"
-    print(f"File name for input data:  {data_file_name} ")
-
-    data_file_path = DATA_DIR + "/" + data_file_name
-
+    # 1) Inicializar algoritmos
     algo_list = create_algorithms(ANSWER_TO_EVERYTHING, OUTLIERS_FRACTION)
-    data_list = load_dataset(data_file_path)
+
+    # 2) Localizar archivo de datos a procesar. Un archivo contiene los datos de un periodo anual
+    year_str = str(execution_date.year)
+    aep_dic_key = year_str + "__" + "ALL_AEP"
+    data_file_name = f"avg_{year_str}.csv"
+    print(f"File name for input data:  {data_file_name} ")
+    data_file_path = DATA_DIR + "/" + data_file_name
+    data_dic = load_dataset(dic_key=aep_dic_key, file_path=data_file_path)
+
+    # 3) Generacion de mesh vectors
     mesh_vec_xx, mesh_vec_yy = create_mesh_vectors()
 
-    detect_outliers(algo_list, data_list, mesh_vec_xx, mesh_vec_yy)
+    # 4) Invocar corrida de algoritmos de deteccion y graficacion
+    for idx_aep, key_aep in enumerate(data_dic):
+        data_list = data_dic.get(key_aep)
+        print(f"START outlier detection for #{idx_aep} key={key_aep}")
+        detect_outliers(key_aep, [algo_list[1]], data_list, mesh_vec_xx, mesh_vec_yy)
+        print(f"END outlier detection for #{idx_aep} key={key_aep}")
 
 
 if __name__ == "__main__":
+    # solo para pruebas locales sin airflow
     main_local(datetime.datetime(2007, 1, 1))
