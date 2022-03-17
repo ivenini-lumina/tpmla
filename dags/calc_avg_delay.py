@@ -182,7 +182,7 @@ def write_aep_dic_to_file(src_file_name, aep_dic):
     print(f"Dest file path: {dest_path}")
 
     with open(dest_path, "w", encoding="UTF-8") as out_file:
-        header = "AEP_CODE,FL_DATE,AVG_DELAY\n"
+        header = "AEP_CODE,FL_DATE,AVG_DELAY,NBR_FLIGHTS\n"
         out_file.write(header)
         for aep in aep_dic.keys():
             fd_dic = aep_dic.get(aep)
@@ -194,6 +194,8 @@ def write_aep_dic_to_file(src_file_name, aep_dic):
                     + fl_date
                     + ","
                     + str(delay_list[DELAY_LIST_AEP_AVG_DELAY])
+                    + ","
+                    + str(delay_list[DELAY_LIST_AEP_COUNT_IDX])
                     + "\n"
                 )
                 out_file.write(row)

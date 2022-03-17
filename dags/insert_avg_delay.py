@@ -25,16 +25,17 @@ def load_avg_delay_file(file_path):
             # header = "AEP_CODE,FL_DATE,AVG_DELAY\n"
 
             for idx, row in enumerate(csv_reader):
-                origin_str = row[com.AEP_CODE_IDX]
-                fl_date_str = row[com.FL_DATE_IDX]
-                dep_delay_str = row[com.AVG_DELAY_IDX]
+                origin_str = row[com.AVG_FILE_AEP_CODE_IDX]
+                fl_date_str = row[com.AVG_FILE_FL_DATE_IDX]
+                dep_delay_str = row[com.AVG_FILE_AVG_DELAY_IDX]
+                nbr_flights_str = row[com.AVG_FILE_NBR_FLIGHTS_IDX]
 
                 # parseo de avg_delay, completado de datos
                 if dep_delay_str == "":
-                    # TODO completado de datos faltantes
+                    # completado de datos faltantes y limpieza
                     dep_delay = 0.0
                 else:
-                    dep_delay = float(row[com.AVG_DELAY_IDX])
+                    dep_delay = float(row[com.AVG_FILE_AVG_DELAY_IDX])
 
                 # parseo de fecha desde str
                 parse_fl_date = datetime.datetime.strptime(fl_date_str, "%Y-%m-%d")
@@ -46,6 +47,9 @@ def load_avg_delay_file(file_path):
 
                 parse_dep_delay = dep_delay
 
+                # numero de vuelos totales en el dia
+                parse_nbr_flights = int(nbr_flights_str)
+
                 fad = FlightAvgDelay()
                 fad.aep_code = origin_str  # data directly from file
                 fad.avg_delay = parse_dep_delay  # float created from str data from file
@@ -53,6 +57,7 @@ def load_avg_delay_file(file_path):
                     parse_fl_date  # datetime created from str data from file
                 )
                 fad.flight_day_nbr = day_of_year  # calculated int in [1, 366] range
+                fad.nbr_flights = parse_nbr_flights  # nbr of flights in date from file
 
                 print(f"#{idx}: {fad}")
                 result_list.append(fad)

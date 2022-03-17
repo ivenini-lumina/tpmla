@@ -5,10 +5,11 @@ import os.path
 # Directorios
 DATA_DIR = "data"
 
-# Constantes de indices del archivo de promedio de demoras
-AEP_CODE_IDX = 0
-FL_DATE_IDX = 1
-AVG_DELAY_IDX = 2
+# Constantes de indices del archivo de promedio de demoras "avg_yyyy.csv"
+AVG_FILE_AEP_CODE_IDX = 0
+AVG_FILE_FL_DATE_IDX = 1
+AVG_FILE_AVG_DELAY_IDX = 2
+AVG_FILE_NBR_FLIGHTS_IDX = 3
 
 
 def load_config():

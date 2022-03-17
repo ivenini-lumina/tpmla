@@ -1,6 +1,6 @@
 """Dummy data model definition."""
 
-from sqlalchemy import Column, Integer, String, Date, Float
+from sqlalchemy import Column, Integer, String, Date, Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -19,12 +19,16 @@ class FlightAvgDelay(Base):
     flight_date = Column(Date)
     avg_delay = Column(Float)
     flight_day_nbr = Column(Integer)
+    nbr_flights = Column(Integer)
+    anomaly = Column(Boolean)
 
     def __repr__(self):
         res = (
             f"<FlightAvgDelay(aep_code={self.aep_code}, "
             f"flight_date={self.flight_date}, "
             f"avg_delay='{self.avg_delay}, "
+            f"nbr_flights='{self.nbr_flights}, "
+            f"anomaly='{self.anomaly}, "
             f"flight_day_nbr={self.flight_day_nbr})>"
         )
         return res
