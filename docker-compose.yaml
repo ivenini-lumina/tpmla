@@ -56,7 +56,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
-    _PIP_ADDITIONAL_REQUIREMENTS: matplotlib==3.3.4
+    _PIP_ADDITIONAL_REQUIREMENTS: matplotlib==3.3.4 scikit-learn==0.24.2
     
   volumes:
     - ./dags:/opt/airflow/dags

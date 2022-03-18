@@ -148,7 +148,11 @@ def generate_aep_dic(file_name):
             print("HEADER")
             print(parse_header)
             print("STATS")
-            file_stats = f"Rows: {rows_parsed} -- avg delay: {avg_delay} -- min delay: {min_delay} -- max delay: {max_delay}"
+            file_stats = (
+                f"Rows: {rows_parsed} -- avg delay: {avg_delay} -- "
+                f"min delay: {min_delay} -- max delay: {max_delay}"
+            )
+
             print(file_stats)
 
     return aep_dic

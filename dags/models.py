@@ -18,6 +18,7 @@ class FlightAvgDelay(Base):
     aep_code = Column(String)
     flight_date = Column(Date)
     avg_delay = Column(Float)
+    # TODO eliminar columna
     flight_day_nbr = Column(Integer)
     nbr_flights = Column(Integer)
     anomaly = Column(Boolean)

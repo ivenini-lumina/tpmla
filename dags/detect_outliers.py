@@ -6,11 +6,12 @@
 """
 import time
 import datetime
-from csv import reader
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.covariance import EllipticEnvelope
 from sklearn.ensemble import IsolationForest
+import commons as com
+from postgres_client import PostgresClient
 
 
 # Parametros generales
@@ -29,11 +30,6 @@ PLOT_EXPECTED_MAX_Y = 650
 # Parametros de configuracion de algoritmos
 ANSWER_TO_EVERYTHING = 42
 OUTLIERS_FRACTION = 0.06
-
-# Constantes de indices del archivo de promedio de demoras
-AEP_CODE_IDX = 0
-FL_DATE_IDX = 1
-AVG_DELAY_IDX = 2
 
 
 def create_mesh_vectors():
@@ -61,7 +57,7 @@ def create_algorithms(random_seed, anomaly_percent):
     return anomaly_algorithms
 
 
-def load_dataset(dic_key, file_path):
+def load_dataset(dic_key, year):
     """
     Carga el archivo file_name y lo itera linea por linea sin cargarlo todo a memoria
     Genera una lista que tiene un array con los datos para luego alimentar a los algoritmos de
@@ -73,42 +69,33 @@ def load_dataset(dic_key, file_path):
 
     dataset_dic = {}
 
-    # open file in read mode
-    with open(file_path, "r", encoding="UTF-8") as read_obj:
-        # pass the file object to reader() to get the reader object
-        csv_reader = reader(read_obj)
-        header = next(csv_reader)
-        # Iterate over each row in the csv using reader object
+    client = PostgresClient()
+    # TODO sacar hard code y usar parametro "year"
 
-        if header is not None:
-            print(f"Header was: {header}")
-            # header = "AEP_CODE,FL_DATE,AVG_DELAY\n"
+    first_day = datetime.datetime(2009, 1, 1)
+    last_day = datetime.datetime(2009, 12, 31)
 
-            for idx, row in enumerate(csv_reader):
-                # origin = row[AEP_CODE_IDX]
-                fl_date_str = row[FL_DATE_IDX]
-                dep_delay_str = row[AVG_DELAY_IDX]
+    print(f"Fetching avg delay data for year {year} from DB")
 
-                if dep_delay_str == "":
-                    dep_delay = 0.0
-                else:
-                    dep_delay = float(row[AVG_DELAY_IDX])
+    query_result = client.get_avg_delay_for_aep(from_date=first_day, to_date=last_day)
+    data_list_from_db = query_result
 
-                fl_date = datetime.datetime.strptime(fl_date_str, "%Y-%m-%d")
-                day_of_year = (fl_date - datetime.datetime(fl_date.year, 1, 1)).days + 1
+    for idx, db_row in enumerate(data_list_from_db):
+        # fecha y numero de dia
+        fl_date = db_row[com.AVG_FILE_FL_DATE_IDX]
+        day_of_year = (fl_date - datetime.date(fl_date.year, 1, 1)).days + 1
 
-                parse_fl_date = day_of_year
-                parse_dep_delay = dep_delay
+        # demora proemdio
+        dep_delay = db_row[com.AVG_FILE_AVG_DELAY_IDX]
 
-                parse_row = [parse_fl_date, parse_dep_delay]
-                # row variable is a list that represents a row in csv
+        transformed_row = [day_of_year, dep_delay]
 
-                nprow = np.array([parse_fl_date, parse_dep_delay])
+        numpy_row = np.array([day_of_year, dep_delay])
 
-                print(f"#{idx}: --> {row} --> {parse_row} --> {nprow}")
+        print(f"#{idx}: --> {db_row} --> {transformed_row} --> {numpy_row}")
 
-                out_sublist = outlier_list[0]
-                out_sublist.append(nprow)
+        out_sublist = outlier_list[0]
+        out_sublist.append(numpy_row)
 
     dataset_list = []
     result_sub_array = np.array(out_sublist)
@@ -240,9 +227,10 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
     print(">>> - Save plot to PNG")
 
     # plt.show()
-    plt.savefig(f"./data/{data_key}.png")
+    png_file_path = f"./data/{data_key}.png"
+    plt.savefig(png_file_path)
 
-    print(f"END - Save plot to PNG for {data_key}")
+    print(f"END - Save plot to PNG for {data_key} in file: {png_file_path}")
 
 
 def main(**context):
@@ -284,10 +272,7 @@ def main_local(execution_date):
     # 2) Localizar archivo de datos a procesar. Un archivo contiene los datos de un periodo anual
     year_str = str(execution_date.year)
     aep_dic_key = year_str + "__" + "ALL_AEP"
-    data_file_name = f"avg_{year_str}.csv"
-    print(f"File name for input data:  {data_file_name} ")
-    data_file_path = DATA_DIR + "/" + data_file_name
-    data_dic = load_dataset(dic_key=aep_dic_key, file_path=data_file_path)
+    data_dic = load_dataset(dic_key=aep_dic_key, year=execution_date.year)
 
     # 3) Generacion de mesh vectors
     mesh_vec_xx, mesh_vec_yy = create_mesh_vectors()
