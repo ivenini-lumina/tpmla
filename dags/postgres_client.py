@@ -45,11 +45,55 @@ class PostgresClient:
         session.close()
         print("Session closed")
 
+    def bulk_update(self, vector_input, vector_prediction, from_date, to_date):
+        """Update table FlightAvgDelay with anomaly data"""
+
+        sql_upd_0 = (
+            f"update {FlightAvgDelay.TABLE_NAME} set anomaly = false "
+            f"where flight_date between :dfrom and :dto "
+        )
+        txt_upd_0 = text(sql_upd_0)
+
+        sql_upd_1 = (
+            f"update {FlightAvgDelay.TABLE_NAME} set anomaly = true where id = :p_id "
+        )
+        txt_upd_1 = text(sql_upd_1)
+
+        print("Create DB engine")
+        engine = self.__get_db_engine()
+        print("Create DB connection")
+        with engine.connect() as conn:
+            print(f"Execute sql {sql_upd_0}")
+            print(f"SQL params: from={from_date} | to={to_date}")
+            result_0 = conn.execute(txt_upd_0, dfrom=from_date, dto=to_date)
+            print(f"Result: {result_0}")
+            print(f"Result Type: {type(result_0)}")
+
+            anomaly_count = 0
+
+            for idx, vec in enumerate(vector_input):
+                v_id = vec[2]
+                v_anomaly = False
+                if vector_prediction[idx] == -1:
+                    v_anomaly = True
+
+                if v_anomaly:
+                    # result_1 = conn.execute(txt_upd_1, p_id=v_id)
+                    conn.execute(txt_upd_1, p_id=v_id)
+                    anomaly_count = anomaly_count + 1
+
+            print(f"Anomaly count updated in DB: {anomaly_count}")
+
+            # conn.execute("commit")
+            # print("Commit complete")
+
+        return result_0
+
     def get_avg_delay_for_aep(self, from_date, to_date):
         """get FlightAvgDelay data for date range and aep code"""
 
         sql = (
-            f"select aep_code, flight_date, avg_delay "
+            f"select id, flight_date, avg_delay "
             f"from {FlightAvgDelay.TABLE_NAME} "
             f"where flight_date between :dfrom and :dto"
         )
@@ -62,6 +106,6 @@ class PostgresClient:
         print(f"Execute sql {sql}")
         print(f"SQL params: from={from_date} | to={to_date}")
         result = conn.execute(txt, dfrom=from_date, dto=to_date).fetchall()
-        print(f"Result: {result}")
-        print(f"Type: {type(result)}")
+        # print(f"Result: {result}")
+        print(f"Result Type: {type(result)}")
         return result

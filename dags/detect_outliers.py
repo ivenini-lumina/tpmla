@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.covariance import EllipticEnvelope
 from sklearn.ensemble import IsolationForest
-import commons as com
 from postgres_client import PostgresClient
 
 
@@ -24,6 +23,7 @@ COLOR_ORANGE = "#ff7f00"  # inliers
 PLOT_EXPECTED_MIN_X = 1
 PLOT_EXPECTED_MAX_X = 366
 
+# TODO Calcular estos valores en base a los datos de los vuelos
 PLOT_EXPECTED_MIN_Y = -100
 PLOT_EXPECTED_MAX_Y = 650
 
@@ -35,6 +35,7 @@ OUTLIERS_FRACTION = 0.06
 def create_mesh_vectors():
     """Ver que hace esto"""
     # Compare given classifiers under given settings
+    # TODO Ver que hace esto y si hace falta calcular el numero de puntos en funcion de los datos
     xx1, yy1 = np.meshgrid(
         np.linspace(PLOT_EXPECTED_MIN_X, PLOT_EXPECTED_MAX_X, 365),
         np.linspace(PLOT_EXPECTED_MIN_Y, PLOT_EXPECTED_MAX_Y, 1500),
@@ -80,25 +81,32 @@ def load_dataset(dic_key, year):
     query_result = client.get_avg_delay_for_aep(from_date=first_day, to_date=last_day)
     data_list_from_db = query_result
 
+    debug_log = False
+
     for idx, db_row in enumerate(data_list_from_db):
+        # id
+        fl_id = db_row[0]
+
         # fecha y numero de dia
-        fl_date = db_row[com.AVG_FILE_FL_DATE_IDX]
+        fl_date = db_row[1]
         day_of_year = (fl_date - datetime.date(fl_date.year, 1, 1)).days + 1
 
-        # demora proemdio
-        dep_delay = db_row[com.AVG_FILE_AVG_DELAY_IDX]
+        # demora promedio
+        dep_delay = db_row[2]
 
         transformed_row = [day_of_year, dep_delay]
 
-        numpy_row = np.array([day_of_year, dep_delay])
+        numpy_row = np.array([day_of_year, dep_delay, fl_id])
 
-        print(f"#{idx}: --> {db_row} --> {transformed_row} --> {numpy_row}")
+        if debug_log:
+            print(f"#{idx}: --> {db_row} --> {transformed_row} --> {numpy_row}")
 
         out_sublist = outlier_list[0]
         out_sublist.append(numpy_row)
 
     dataset_list = []
     result_sub_array = np.array(out_sublist)
+    print(f"Data set loaded: {result_sub_array}")
     dataset_list.append(result_sub_array)
 
     dataset_dic[dic_key] = dataset_list
@@ -128,13 +136,18 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
             f"    >>> - Start Running Dataset # {i_dataset} with size: {len(data_vec_x)}"
         )
         print(f"    >>> - Data: {data_vec_x}")
+        # Remover columna id del set de datos para train
+        data_vec_without_id_x = data_vec_x[:, [0, 1]]
+        print(f"    >>> - Data without id column: {data_vec_without_id_x}")
 
         plot_num = 1
 
         for algo_name, algorithm in anomaly_algorithms:
             fit_start_time = time.time()
-            algorithm.fit(data_vec_x)
+            print(f"    >>> - Algorithm {algo_name} fit START")
+            algorithm.fit(data_vec_without_id_x)
             fit_end_time = time.time()
+            print(f"    END - Algorithm {algo_name} fit END")
             plt.subplot(len(datasets), len(anomaly_algorithms), plot_num)
             if i_dataset == 0:
                 plt.title(f"{data_key} -- {algo_name}", size=15)
@@ -143,13 +156,15 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
 
             # fit the data and tag outliers
             if algo_name == "Local Outlier Factor":
-                y_pred = algorithm.fit_predict(data_vec_x)
-                print(f"INPUT : {data_vec_x}")
-                print(f"OUTPUT: {y_pred}")
+                print(f"INPUT data to predict: {data_vec_without_id_x}")
+                y_pred = algorithm.fit_predict(data_vec_without_id_x)
+                print(f"OUTPUT prediction: {y_pred}")
             else:
-                y_pred = algorithm.fit(data_vec_x).predict(data_vec_x)
-                print(f"INPUT : {data_vec_x}")
-                print(f"OUTPUT: {y_pred}")
+                print(f"INPUT data to predict: {data_vec_without_id_x}")
+                y_pred = algorithm.fit(data_vec_without_id_x).predict(
+                    data_vec_without_id_x
+                )
+                print(f"OUTPUT prediction: {y_pred}")
 
             print(f"        >>> - Plot algorithm {algo_name} for key={data_key}")
 
@@ -159,16 +174,16 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
                 ravel_xx = xx_param.ravel()
                 ravel_yy = yy_param.ravel()
                 point_xy = np.c_[ravel_xx, ravel_yy]
-                print(f"CTR PARAM X # : {len(xx_param)} --> {xx_param.shape}")
-                print(f"CTR PARAM X: {xx_param}")
-                print(f"CTR PARAM Y # : {len(yy_param)} --> {yy_param.shape}")
-                print(f"CTR PARAM Y: {yy_param}")
-                print(f"CTR RAVEL X #: {len(ravel_xx)} --> {ravel_xx.shape}")
-                print(f"CTR RAVEL X: {ravel_xx}")
-                print(f"CTR RAVEL Y #: {len(ravel_yy)} --> {ravel_yy.shape}")
-                print(f"CTR RAVEL Y: {ravel_yy}")
-                print(f"CTR INPUT XY #: {len(point_xy)} --> {point_xy.shape}")
-                print(f"CTR INPUT XY: {point_xy}")
+                print(f"Contour PARAM X # : {len(xx_param)} --> {xx_param.shape}")
+                print(f"Contour PARAM X: {xx_param}")
+                print(f"Contour PARAM Y # : {len(yy_param)} --> {yy_param.shape}")
+                print(f"Contour PARAM Y: {yy_param}")
+                print(f"Contour RAVEL X #: {len(ravel_xx)} --> {ravel_xx.shape}")
+                print(f"Contour RAVEL X: {ravel_xx}")
+                print(f"Contour RAVEL Y #: {len(ravel_yy)} --> {ravel_yy.shape}")
+                print(f"Contour RAVEL Y: {ravel_yy}")
+                print(f"Contour INPUT XY #: {len(point_xy)} --> {point_xy.shape}")
+                print(f"Contour INPUT XY: {point_xy}")
 
                 prediction_vec_z = algorithm.predict(point_xy)
                 print(
@@ -179,7 +194,7 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
                 print(
                     f"RESHAPE PREDICTION Z # {len(prediction_vec_z)} --> {prediction_vec_z.shape}"
                 )
-                print(f"CTR FINAL OUTPUT Z: {prediction_vec_z}")
+                print(f"Contour FINAL OUTPUT Z: {prediction_vec_z}")
                 plt.contour(
                     xx_param,
                     yy_param,
@@ -206,6 +221,7 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
             # plt.xticks(())
             # plt.yticks(())
 
+            # Agregar al grafico el tiempo que ha llevado el training del algoritmo
             elapsed_fit_time = fit_end_time - fit_start_time
             elapsed_fit_time_str = (f"{elapsed_fit_time:.2f} sec").lstrip("0")
 
@@ -219,6 +235,20 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
             )
             print(f"        END - Plot algorithm {algo_name} for key={data_key}")
             print(f"        END - Run algorithm {algo_name} for key={data_key}")
+
+            print(f"Original array: {data_vec_x} --> {data_vec_x.shape}")
+            print(f"Predicted array: {y_pred} --> {y_pred.shape}")
+
+            print(f"Inlier count {(y_pred == 1).sum()}")
+            print(f"Outlier count {(y_pred == -1).sum()}")
+
+            # TODO sacar hard code y usar parametro
+            first_day = datetime.datetime(2009, 1, 1)
+            last_day = datetime.datetime(2009, 12, 31)
+
+            client = PostgresClient()
+            client.bulk_update(data_vec_x, y_pred, first_day, last_day)
+
             print(f"    END - Run dataset # {i_dataset}")
             plot_num += 1
 
@@ -266,6 +296,8 @@ def main_local(execution_date):
     generar el grafico correspondiente
     """
 
+    # 0) TODO Agregar que se borren las anomalias de la base al empezar
+
     # 1) Inicializar algoritmos
     algo_list = create_algorithms(ANSWER_TO_EVERYTHING, OUTLIERS_FRACTION)
 
@@ -281,6 +313,7 @@ def main_local(execution_date):
     for idx_aep, key_aep in enumerate(data_dic):
         data_list = data_dic.get(key_aep)
         print(f"START outlier detection for #{idx_aep} key={key_aep}")
+        # TODO parametrizar el algoritmo a utilizar
         detect_outliers(key_aep, [algo_list[1]], data_list, mesh_vec_xx, mesh_vec_yy)
         print(f"END outlier detection for #{idx_aep} key={key_aep}")
 
