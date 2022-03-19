@@ -36,6 +36,7 @@ class PostgresClient:
         print("Create DB session")
         session = Session(engine)
         print(f"Deleting {FlightAvgDelay.TABLE_NAME} table")
+        # TODO borrar usando parametro de fecha
         del_query = session.query(FlightAvgDelay)
         del_query.delete()
         print(f"Adding list with {len(flight_avg_delay_list)} elements")
@@ -107,5 +108,56 @@ class PostgresClient:
         print(f"SQL params: from={from_date} | to={to_date}")
         result = conn.execute(txt, dfrom=from_date, dto=to_date).fetchall()
         # print(f"Result: {result}")
+        print(f"Result Size: {len(result)}")
         print(f"Result Type: {type(result)}")
+        return result
+
+    def get_aep_list(self, from_date, to_date):
+        """get list of unique airports in the FlightAvgDelay table in a date range"""
+
+        sql = (
+            f"select distinct aep_code "
+            f"from {FlightAvgDelay.TABLE_NAME} "
+            f"where flight_date between :dfrom and :dto "
+            f"order by aep_code "
+            f"limit 10 "
+            # TODO Eliminar el limite de rows - Solo para pruebas
+        )
+        txt = text(sql)
+
+        print("Create DB engine")
+        engine = self.__get_db_engine()
+        print("Create DB connection")
+        conn = engine.connect()
+        print(f"Execute sql {sql}")
+        print(f"SQL params: from={from_date} | to={to_date}")
+        result = conn.execute(txt, dfrom=from_date, dto=to_date).fetchall()
+        # print(f"Result: {result}")
+        print(f"Result Size: {len(result)}")
+        print(f"Result Type: {type(result)}")
+        return result
+
+    def get_flight_list(self, aep_code, from_date, to_date):
+        """get list of flights in the FlightAvgDelay table for airport and date range"""
+
+        sql = (
+            f"select flight_date, nbr_flights, case when anomaly = true then -1 else 1 end anomaly "
+            f"from {FlightAvgDelay.TABLE_NAME} "
+            f"where flight_date between :dfrom and :dto and aep_code = :aep "
+            f"order by flight_date "
+        )
+        txt = text(sql)
+
+        # print("Create DB engine")
+        engine = self.__get_db_engine()
+        # print("Create DB connection")
+        conn = engine.connect()
+        # print(f"Execute sql {sql}")
+        # print(f"SQL params: from={from_date} | to={to_date} | aep={aep_code}")
+        result = conn.execute(
+            txt, dfrom=from_date, dto=to_date, aep=aep_code
+        ).fetchall()
+        # print(f"Result: {result}")
+        # print(f"Result Size: {len(result)}")
+        # print(f"Result Type: {type(result)}")
         return result

@@ -4,6 +4,7 @@
     de demoras por fecha y aeropuerto
     Escribe como output un archivo XXXXX
 """
+import os
 import time
 import datetime
 import matplotlib.pyplot as plt
@@ -11,12 +12,7 @@ import numpy as np
 from sklearn.covariance import EllipticEnvelope
 from sklearn.ensemble import IsolationForest
 from postgres_client import PostgresClient
-
-
-# Parametros generales
-DATA_DIR = "data"
-COLOR_CERULEAN = "#377eb8"  # outliers
-COLOR_ORANGE = "#ff7f00"  # inliers
+import commons as com
 
 
 # Parametros de graficos
@@ -71,10 +67,9 @@ def load_dataset(dic_key, year):
     dataset_dic = {}
 
     client = PostgresClient()
-    # TODO sacar hard code y usar parametro "year"
 
-    first_day = datetime.datetime(2009, 1, 1)
-    last_day = datetime.datetime(2009, 12, 31)
+    first_day = datetime.datetime(year, 1, 1)
+    last_day = datetime.datetime(year, 12, 31)
 
     print(f"Fetching avg delay data for year {year} from DB")
 
@@ -128,6 +123,9 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
     que tiene los datos de todos los aeropuertos juntos o sino
     puede recibirse un dataset por cada aeropuerto
     """
+
+    year_string = data_key[0:4]
+    year = int(year_string)
 
     print(">>> - Run each algorithm in each dataset")
 
@@ -204,7 +202,7 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
                     colors="black",
                 )
 
-            colors = np.array([COLOR_CERULEAN, COLOR_ORANGE])
+            colors = np.array([com.COLOR_CERULEAN, com.COLOR_ORANGE])
             scatter_x0_in = data_vec_x[:, 0]
             scatter_x1_in = data_vec_x[:, 1]
 
@@ -242,9 +240,8 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
             print(f"Inlier count {(y_pred == 1).sum()}")
             print(f"Outlier count {(y_pred == -1).sum()}")
 
-            # TODO sacar hard code y usar parametro
-            first_day = datetime.datetime(2009, 1, 1)
-            last_day = datetime.datetime(2009, 12, 31)
+            first_day = datetime.datetime(year, 1, 1)
+            last_day = datetime.datetime(year, 12, 31)
 
             client = PostgresClient()
             client.bulk_update(data_vec_x, y_pred, first_day, last_day)
@@ -256,8 +253,13 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
 
     print(">>> - Save plot to PNG")
 
-    # plt.show()
-    png_file_path = f"./data/{data_key}.png"
+    # Guardar en un directorio el grafico de la comparacion de algoritmos
+
+    if not os.path.exists(com.DATA_DIR):
+        # Create a new directory because it does not exist
+        os.makedirs(com.DATA_DIR)
+
+    png_file_path = f"{com.DATA_DIR}/{data_key}.png"
     plt.savefig(png_file_path)
 
     print(f"END - Save plot to PNG for {data_key} in file: {png_file_path}")

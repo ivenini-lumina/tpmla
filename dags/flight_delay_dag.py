@@ -8,15 +8,15 @@ import calc_avg_delay as cad
 import create_tables as ct
 import insert_avg_delay as iad
 import detect_outliers as do
+import plot_outliers as po
 
-# import fetch_prices as fp
-# import plot_stocks as ps
 
 with DAG(
     "flight_delay_dag",
+    # TODO implementar schedule anual
     schedule_interval=timedelta(days=1),
     start_date=datetime(2007, 1, 1),
-    end_date=datetime(2007, 1, 2),
+    end_date=datetime(2007, 1, 1),
     catchup=True,
 ) as dag:
     create_tables = PythonOperator(task_id="create-tables", python_callable=ct.main)
@@ -29,11 +29,15 @@ with DAG(
     detect_outliers = PythonOperator(
         task_id="detect-outliers", python_callable=do.main, provide_context=True
     )
-    # fetch_prices = PythonOperator(task_id="fetch-prices", python_callable=fp.main)
-    # plot_stocks = PythonOperator(
-    #    task_id="plot-stocks", python_callable=ps.main, provide_context=True
-    # )
+    plot_outliers = PythonOperator(
+        task_id="plot-outliers", python_callable=po.main, provide_context=True
+    )
 
-    # deps = create_tables >> fetch_prices >> plot_stocks
-    deps = create_tables >> calc_avg_delay >> insert_avg_delay >> detect_outliers
+    deps = (
+        create_tables
+        >> calc_avg_delay
+        >> insert_avg_delay
+        >> detect_outliers
+        >> plot_outliers
+    )
     print(f"Flight delay DAG dependencies {deps}")

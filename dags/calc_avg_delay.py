@@ -5,8 +5,8 @@
 """
 from csv import reader
 import sys
+import commons as com
 
-DATA_DIR = "data"
 
 FL_DATE_COL_IDX = 0
 ORIGIN_COL_IDX = 3
@@ -36,7 +36,7 @@ def main(**context):
     file_name = str(execution_date.year) + ".csv"
     print(f"File name for input data:  {file_name} ")
 
-    file_path = DATA_DIR + "/" + file_name
+    file_path = com.DATA_DIR + "/" + file_name
     aep_dic = generate_aep_dic(file_path)
     print_aep_dic(aep_dic)
     write_aep_dic_to_file(file_name, aep_dic)
@@ -182,7 +182,7 @@ def write_aep_dic_to_file(src_file_name, aep_dic):
 
     """
     dest_file = "avg_" + src_file_name
-    dest_path = DATA_DIR + "/" + dest_file
+    dest_path = com.DATA_DIR + "/" + dest_file
     print(f"Dest file path: {dest_path}")
 
     with open(dest_path, "w", encoding="UTF-8") as out_file:
@@ -203,10 +203,3 @@ def write_aep_dic_to_file(src_file_name, aep_dic):
                     + "\n"
                 )
                 out_file.write(row)
-
-
-# if __name__ == "__main__":
-#    main("2007.csv")
-
-# calc_avg_delay("2009.csv")
-# calc_avg_delay("2007.csv")

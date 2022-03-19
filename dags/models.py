@@ -22,6 +22,7 @@ class FlightAvgDelay(Base):
     flight_day_nbr = Column(Integer)
     nbr_flights = Column(Integer)
     anomaly = Column(Boolean)
+    # TODO agregar indices por aep_code y flight_date
 
     def __repr__(self):
         res = (

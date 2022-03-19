@@ -3,7 +3,15 @@ import configparser
 import os.path
 
 # Directorios
+
+# TODO extrer a una funcion el directorio data
 DATA_DIR = "data"
+
+COLOR_CERULEAN = "#377eb8"  # outliers
+COLOR_ORANGE = "#ff7f00"  # inliers
+
+COLOR_GREEN = "#b6d7a8"
+COLOR_RED = "#ff0000"
 
 # Constantes de indices del archivo de promedio de demoras "avg_yyyy.csv"
 AVG_FILE_AEP_CODE_IDX = 0
