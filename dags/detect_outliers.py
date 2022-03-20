@@ -24,8 +24,10 @@ PLOT_EXPECTED_MIN_Y = -100
 PLOT_EXPECTED_MAX_Y = 650
 
 # Parametros de configuracion de algoritmos
-ANSWER_TO_EVERYTHING = 42
-OUTLIERS_FRACTION = 0.06
+ALGO_COVARIANCE_NAME = "Robust Covariance"
+ALGO_COVARIANCE_IDX = 0
+ALGO_FOREST_NAME = "Isolation Forest"
+ALGO_FOREST_IDX = 1
 
 
 def create_mesh_vectors():
@@ -45,9 +47,9 @@ def create_algorithms(random_seed, anomaly_percent):
     """Crea un listado de algoritmos para detectar anomalias segun los parametros indicado"""
 
     anomaly_algorithms = [
-        ("Robust covariance", EllipticEnvelope(contamination=anomaly_percent)),
+        (ALGO_COVARIANCE_NAME, EllipticEnvelope(contamination=anomaly_percent)),
         (
-            "Isolation Forest",
+            ALGO_FOREST_NAME,
             IsolationForest(contamination=anomaly_percent, random_state=random_seed),
         ),
     ]
@@ -109,7 +111,7 @@ def load_dataset(dic_key, year):
     return dataset_dic
 
 
-def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
+def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param, cfg):
     """
     - Corre los algoritmos para detectar outliers y grafica el resultado
     - Recibe un diccionario de datasets. La key es str y corresponde al codigo
@@ -255,11 +257,13 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param):
 
     # Guardar en un directorio el grafico de la comparacion de algoritmos
 
-    if not os.path.exists(com.DATA_DIR):
-        # Create a new directory because it does not exist
-        os.makedirs(com.DATA_DIR)
+    data_dir = com.get_data_dir(cfg)
 
-    png_file_path = f"{com.DATA_DIR}/{data_key}.png"
+    if not os.path.exists(data_dir):
+        # Create a new directory because it does not exist
+        os.makedirs(data_dir)
+
+    png_file_path = f"{data_dir}/{data_key}.png"
     plt.savefig(png_file_path)
 
     print(f"END - Save plot to PNG for {data_key} in file: {png_file_path}")
@@ -298,10 +302,24 @@ def main_local(execution_date):
     generar el grafico correspondiente
     """
 
+    cfg = com.load_config()
+    anomaly_algorithm = cfg.get(
+        com.DATA_CFG_SECTION, com.DATA_CFG_PROP_ANOMALY_ALGORITHM
+    )
+    random_seed = int(cfg.get(com.DATA_CFG_SECTION, com.DATA_CFG_PROP_RANDOM_SEED))
+    contamination = float(
+        cfg.get(com.DATA_CFG_SECTION, com.DATA_CFG_PROP_CONTAMINATION)
+    )
+
     # 0) TODO Agregar que se borren las anomalias de la base al empezar
 
     # 1) Inicializar algoritmos
-    algo_list = create_algorithms(ANSWER_TO_EVERYTHING, OUTLIERS_FRACTION)
+    algo_list = create_algorithms(random_seed, contamination)
+
+    if anomaly_algorithm == ALGO_COVARIANCE_NAME:
+        algo_idx = ALGO_COVARIANCE_IDX
+    elif anomaly_algorithm == ALGO_FOREST_NAME:
+        algo_idx = ALGO_FOREST_IDX
 
     # 2) Localizar archivo de datos a procesar. Un archivo contiene los datos de un periodo anual
     year_str = str(execution_date.year)
@@ -315,8 +333,9 @@ def main_local(execution_date):
     for idx_aep, key_aep in enumerate(data_dic):
         data_list = data_dic.get(key_aep)
         print(f"START outlier detection for #{idx_aep} key={key_aep}")
-        # TODO parametrizar el algoritmo a utilizar
-        detect_outliers(key_aep, [algo_list[1]], data_list, mesh_vec_xx, mesh_vec_yy)
+        detect_outliers(
+            key_aep, [algo_list[algo_idx]], data_list, mesh_vec_xx, mesh_vec_yy, cfg
+        )
         print(f"END outlier detection for #{idx_aep} key={key_aep}")
 
 

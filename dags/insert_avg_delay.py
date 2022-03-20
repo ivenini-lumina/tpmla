@@ -88,10 +88,11 @@ def main_local(execution_date):
     """
 
     # Localizar archivo de datos a procesar. Un archivo contiene los datos de un periodo anual
+    cfg = com.load_config()
     year_str = str(execution_date.year)
     data_file_name = f"avg_{year_str}.csv"
     print(f"File name for input data:  {data_file_name} ")
-    data_file_path = com.DATA_DIR + "/" + data_file_name
+    data_file_path = com.get_data_dir(cfg) + "/" + data_file_name
     data_list = load_avg_delay_file(file_path=data_file_path)
 
     if len(data_list) > 0:

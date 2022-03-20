@@ -12,6 +12,8 @@ def main(**context):
     execution_date = context["data_interval_start"]
     print(f"Execution Date for plot_outliers:  {execution_date} ")
 
+    cfg = com.load_config()
+
     from_date = datetime.datetime(execution_date.year, 1, 1)
     to_date = datetime.datetime(execution_date.year, 12, 31)
 
@@ -25,7 +27,7 @@ def main(**context):
 
     # Crear directorios si no existen
     year_string = str(from_date.year)
-    data_dir = f"{com.DATA_DIR}/{year_string}"
+    data_dir = f"{com.get_data_dir(cfg)}/{year_string}"
 
     if not os.path.exists(data_dir):
         # Create a new directory because it does not exist
