@@ -13,10 +13,9 @@ import plot_outliers as po
 
 with DAG(
     "flight_delay_dag",
-    # TODO implementar schedule anual
-    schedule_interval=timedelta(days=1),
+    schedule_interval=timedelta(days=366),
     start_date=datetime(2007, 1, 1),
-    end_date=datetime(2007, 1, 1),
+    end_date=datetime(2018, 1, 31),
     catchup=True,
 ) as dag:
     create_tables = PythonOperator(task_id="create-tables", python_callable=ct.main)
