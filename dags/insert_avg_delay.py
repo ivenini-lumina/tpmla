@@ -40,11 +40,6 @@ def load_avg_delay_file(file_path):
                 # parseo de fecha desde str
                 parse_fl_date = datetime.datetime.strptime(fl_date_str, "%Y-%m-%d")
 
-                # generacion de nuevo valor entero para el numero de dia
-                day_of_year = (
-                    parse_fl_date - datetime.datetime(parse_fl_date.year, 1, 1)
-                ).days + 1
-
                 parse_dep_delay = dep_delay
 
                 # numero de vuelos totales en el dia
@@ -56,7 +51,6 @@ def load_avg_delay_file(file_path):
                 fad.flight_date = (
                     parse_fl_date  # datetime created from str data from file
                 )
-                fad.flight_day_nbr = day_of_year  # calculated int in [1, 366] range
                 fad.nbr_flights = parse_nbr_flights  # nbr of flights in date from file
 
                 print(f"#{idx}: {fad}")
@@ -98,7 +92,7 @@ def main_local(execution_date):
     if len(data_list) > 0:
         print(f"START bulk data insert for file {data_file_path}")
         client = PostgresClient()
-        client.bulk_save(data_list)
+        client.bulk_save(data_list, execution_date.year)
         print(f"END bulk data insert for file {data_file_path}")
     else:
         print(f"WARNING: No data to insert found for file: {data_file_path}")

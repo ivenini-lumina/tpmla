@@ -1,4 +1,5 @@
 """Postgres client module"""
+import datetime
 from models import Base, FlightAvgDelay
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from sqlalchemy.orm import Session
@@ -28,16 +29,23 @@ class PostgresClient:
         engine = self.__get_db_engine()
         Base.metadata.create_all(engine)
 
-    def bulk_save(self, flight_avg_delay_list):
+    def bulk_save(self, flight_avg_delay_list, year):
         """bulk save for FlightAvgDelay list"""
         print(f"Saving list {flight_avg_delay_list}")
         print("Create DB engine")
         engine = self.__get_db_engine()
         print("Create DB session")
         session = Session(engine)
-        print(f"Deleting {FlightAvgDelay.TABLE_NAME} table")
-        # TODO borrar usando parametro de fecha
-        del_query = session.query(FlightAvgDelay)
+        from_date = datetime.datetime(year, 1, 1)
+        to_date = datetime.datetime(year, 12, 31)
+        print(
+            f"Deleting {FlightAvgDelay.TABLE_NAME} table for date range: {from_date} -- {to_date}"
+        )
+        del_query = (
+            session.query(FlightAvgDelay)
+            .filter(FlightAvgDelay.flight_date >= from_date)
+            .filter(FlightAvgDelay.flight_date <= to_date)
+        )
         del_query.delete()
         print(f"Adding list with {len(flight_avg_delay_list)} elements")
         session.add_all(flight_avg_delay_list)
@@ -90,7 +98,7 @@ class PostgresClient:
 
         return result_0
 
-    def get_avg_delay_for_aep(self, from_date, to_date):
+    def get_avg_delay_for_date_range(self, from_date, to_date):
         """get FlightAvgDelay data for date range and aep code"""
 
         sql = (

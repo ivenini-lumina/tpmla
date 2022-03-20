@@ -14,15 +14,12 @@ class FlightAvgDelay(Base):
     __tablename__ = TABLE_NAME
 
     # aep_code, flight_date, avg_delay
-    id = Column(Integer, primary_key=True)
-    aep_code = Column(String)
-    flight_date = Column(Date)
-    avg_delay = Column(Float)
-    # TODO eliminar columna
-    flight_day_nbr = Column(Integer)
-    nbr_flights = Column(Integer)
+    id = Column(Integer, primary_key=True, nullable=False)
+    aep_code = Column(String, index=True, nullable=False)
+    flight_date = Column(Date, index=True, nullable=False)
+    avg_delay = Column(Float, nullable=False)
+    nbr_flights = Column(Integer, nullable=False)
     anomaly = Column(Boolean)
-    # TODO agregar indices por aep_code y flight_date
 
     def __repr__(self):
         res = (
@@ -30,7 +27,6 @@ class FlightAvgDelay(Base):
             f"flight_date={self.flight_date}, "
             f"avg_delay='{self.avg_delay}, "
             f"nbr_flights='{self.nbr_flights}, "
-            f"anomaly='{self.anomaly}, "
-            f"flight_day_nbr={self.flight_day_nbr})>"
+            f"anomaly={self.anomaly})>"
         )
         return res

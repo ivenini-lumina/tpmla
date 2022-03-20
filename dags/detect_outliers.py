@@ -75,7 +75,9 @@ def load_dataset(dic_key, year):
 
     print(f"Fetching avg delay data for year {year} from DB")
 
-    query_result = client.get_avg_delay_for_aep(from_date=first_day, to_date=last_day)
+    query_result = client.get_avg_delay_for_date_range(
+        from_date=first_day, to_date=last_day
+    )
     data_list_from_db = query_result
 
     debug_log = False
