@@ -19,7 +19,7 @@ import commons as com
 PLOT_EXPECTED_MIN_X = 1
 PLOT_EXPECTED_MAX_X = 366
 
-# TODO Calcular estos valores en base a los datos de los vuelos
+# TODO Ver si hace falta calcular estos valores en base a los datos de los vuelos
 PLOT_EXPECTED_MIN_Y = -100
 PLOT_EXPECTED_MAX_Y = 650
 
@@ -33,7 +33,7 @@ ALGO_FOREST_IDX = 1
 def create_mesh_vectors():
     """Ver que hace esto"""
     # Compare given classifiers under given settings
-    # TODO Ver que hace esto y si hace falta calcular el numero de puntos en funcion de los datos
+    # TODO Ver si hace falta calcular el numero de puntos en funcion de los datos
     xx1, yy1 = np.meshgrid(
         np.linspace(PLOT_EXPECTED_MIN_X, PLOT_EXPECTED_MAX_X, 365),
         np.linspace(PLOT_EXPECTED_MIN_Y, PLOT_EXPECTED_MAX_Y, 1500),
@@ -144,7 +144,7 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param, 
 
         plot_num = 1
 
-        # TODO tomar tiempos de cada parte y ver si se puede omitir alguna
+        # TODO Ver si conviene tomar tiempos de cada parte y si se puede omitir el contorno
         for algo_name, algorithm in anomaly_algorithms:
             fit_start_time = time.time()
             print(f"    >>> - Algorithm {algo_name} fit START")
