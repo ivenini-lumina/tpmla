@@ -14,7 +14,7 @@ import plot_outliers as po
 with DAG(
     "flight_delay_dag",
     schedule_interval=timedelta(days=366),
-    start_date=datetime(2007, 1, 1),
+    start_date=datetime(2009, 1, 1),
     end_date=datetime(2018, 1, 31),
     catchup=True,
 ) as dag:

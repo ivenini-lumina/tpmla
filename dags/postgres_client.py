@@ -128,8 +128,6 @@ class PostgresClient:
             f"from {FlightAvgDelay.TABLE_NAME} "
             f"where flight_date between :dfrom and :dto "
             f"order by aep_code "
-            f"limit 10 "
-            # TODO Eliminar el limite de rows - Solo para pruebas
         )
         txt = text(sql)
 

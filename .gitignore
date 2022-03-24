@@ -131,3 +131,5 @@ data/*.csv
 out*.txt
 logs/scheduler/*
 data/*
+sql/db.sql
+credentials

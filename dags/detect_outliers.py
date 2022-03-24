@@ -144,6 +144,7 @@ def detect_outliers(data_key, anomaly_algorithms, datasets, xx_param, yy_param, 
 
         plot_num = 1
 
+        # TODO tomar tiempos de cada parte y ver si se puede omitir alguna
         for algo_name, algorithm in anomaly_algorithms:
             fit_start_time = time.time()
             print(f"    >>> - Algorithm {algo_name} fit START")
