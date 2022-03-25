@@ -10,6 +10,7 @@ import create_tables as ct
 import insert_avg_delay as iad
 import detect_outliers as do
 import plot_outliers as po
+import upload_plots as up
 
 
 with DAG(
@@ -35,7 +36,9 @@ with DAG(
     plot_outliers = PythonOperator(
         task_id="plot-outliers", python_callable=po.main, provide_context=True
     )
-    # TODO Ver si hace falta agregar upload a s3 una vez concluido el ploteo
+    upload_plots = PythonOperator(
+        task_id="upload-plots", python_callable=up.main, provide_context=True
+    )
 
     deps = (
         create_tables
@@ -44,5 +47,6 @@ with DAG(
         >> insert_avg_delay
         >> detect_outliers
         >> plot_outliers
+        >> upload_plots
     )
     print(f"Flight delay DAG dependencies {deps}")

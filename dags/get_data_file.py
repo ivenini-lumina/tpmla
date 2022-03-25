@@ -35,7 +35,6 @@ def main(**context):
         def_region = cfg.get(com.ENV_CFG_SECTION, com.ENV_CFG_PROP_DEF_REGION)
 
         s3_bucket_name = cfg.get(com.ENV_CFG_SECTION, com.ENV_CFG_PROP_S3_BUCKET)
-        # s3_data_file_url = s3_bucket_name + "/" + data_file_name
 
         print(f"Getting file from bucket: {s3_bucket_name}")
         print(f"Data folder: {data_dir}")
@@ -52,6 +51,7 @@ def main(**context):
             com.CRED_FILE_DEFAULT_SECTION, com.CRED_FILE_PROP_SESSION_TOKEN
         )
 
+        print("<<< Credentials >>>")
         print(f"ak: {len(acces_key) * '*'}")
         print(f"sa: {len(secret_access) * '*'}")
         print(f"st: {len(session_token) * '*'}")
