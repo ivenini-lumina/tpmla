@@ -16,6 +16,11 @@ AVG_FILE_NBR_FLIGHTS_IDX = 3
 
 ENV_CFG_SECTION = "EnvironmentSection"
 ENV_CFG_PROP_RUN_MODE = "env.run_mode"
+ENV_CFG_PROP_S3_BUCKET = "env.s3_data_bucket"
+ENV_CFG_PROP_DEF_REGION = "env.default_region"
+
+ENV_CFG_VAL_RUN_MODE_CLOUD = "cloud"
+ENV_CFG_VAL_RUN_MODE_STAND_ALONE = "stand-alone"
 
 FILE_CFG_SECTION = "FileSection"
 FILE_CFG_PROP_DATA_DIR = "file.data_dir"
@@ -25,6 +30,15 @@ DATA_CFG_PROP_ANOMALY_ALGORITHM = "data.anomaly_algorithm"
 DATA_CFG_PROP_RANDOM_SEED = "data.random_seed"
 DATA_CFG_PROP_CONTAMINATION = "data.contamination"
 
+CONFIG_FILE_PATH = "conf/config.ini"
+CREDENTIALS_FILE_PATH = "conf/credentials"
+
+CRED_FILE_DEFAULT_SECTION = "default"
+
+CRED_FILE_PROP_ACCESS_KEY_ID = "aws_access_key_id"
+CRED_FILE_PROP_SECRET_ACCESS_KEY = "aws_secret_access_key"
+CRED_FILE_PROP_SESSION_TOKEN = "aws_session_token"
+
 
 def get_data_dir(cfg):
     """Get data directory"""
@@ -32,18 +46,28 @@ def get_data_dir(cfg):
     return data_dir
 
 
+def load_credentials():
+    """Load credentials file"""
+    return load_properties_file(CREDENTIALS_FILE_PATH)
+
+
 def load_config():
-    """Load config file"""
-    print("### Loading configuration file ###")
-    cfg_file_name = "dags/config.ini"
-    print(f"Config file name: {cfg_file_name}")
+    """Load configuration file"""
+    return load_properties_file(CONFIG_FILE_PATH)
+
+
+def load_properties_file(file_path):
+    """Load properties file"""
+    print(f"### Loading {file_path} file ###")
+    cfg_file_name = file_path
+    print(f"File name: {cfg_file_name}")
     file_found = os.path.isfile(cfg_file_name)
     print(f"File found: {file_found}")
 
     if file_found:
         config = configparser.RawConfigParser()
         config.read(cfg_file_name)
-        print(f"Using configuration file {cfg_file_name}")
+        print(f"Using file {cfg_file_name}")
         return config
     else:
-        raise Exception(f"Could not find configuration file {cfg_file_name}")
+        raise Exception(f"Could not find file {cfg_file_name}")
