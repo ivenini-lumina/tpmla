@@ -79,6 +79,10 @@ v2:
 https://us-east-1.quicksight.aws.amazon.com/sn/accounts/671665414070/dashboards/b661ccf3-ae10-4c67-98f6-f7f3f75e78ba?directory_alias=tp-mla-ivenini-quicksight-2
 
 
+v3:
+https://us-east-1.quicksight.aws.amazon.com/sn/dashboards/eec68c35-f798-4c9d-953c-c908cdd8c016
+
+https://us-east-1.quicksight.aws.amazon.com/sn/dashboards/eec68c35-f798-4c9d-953c-c908cdd8c016/views/4af76dbd-1d78-442f-8332-0a500a092197
 
 
 
