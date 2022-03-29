@@ -1,0 +1,12 @@
+{
+    "fileLocations": [
+        {
+            "URIs": []
+        },
+        {
+            "URIPrefixes": [
+                "s3://data-bucket-tp-mla-ivenini/data/"
+            ]
+        }
+    ]
+}
